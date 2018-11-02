@@ -1,19 +1,44 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Input from 'react-native-elements/src/input/Input';
+import Ionicon from 'react-native-vector-icons/Ionicons';
 import {
-  Button,
+	Button,
   Dimensions,
   LayoutAnimation,
   UIManager,
   StyleSheet,
   View,
   ActivityIndicator,
-  Text,
+	Text,
+	TouchableOpacity
 } from 'react-native';
-
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const IOS_GRAY = '#7d7d7d';
+
+// TODO: add height adjustment logic to the input component as props 
+// props are then passed to textInput component that will handle the onChangeText
+
+// constructor(props) {
+// 	super(props);
+// 	this.state = {text: '', height: 0};
+// }
+// render() {
+// 	return (
+// 		<TextInput
+// 			{...this.props}
+// 			multiline={true}
+// 			onChangeText={(text) => {
+// 					this.setState({ text })
+// 			}}
+// 			onContentSizeChange={(event) => {
+// 					this.setState({ height: event.nativeEvent.contentSize.height })
+// 			}}
+// 			style={[styles.default, {height: Math.max(35, this.state.height)}]}
+// 			value={this.state.text}
+// 		/>
+// 	);
+// }
 
 class ChatInput extends components {
 	focus = () => {
@@ -33,7 +58,12 @@ class ChatInput extends components {
   cancel = () => {
     this.blur();
     this.props.onCancel();
-  };
+	};
+	
+	send = () => {
+		this.blur();
+		this.props.onSend();
+	}
 
   onFocus = () => {
     this.props.onFocus();
@@ -50,18 +80,67 @@ class ChatInput extends components {
   onChangeText = text => {
     this.props.onChangeText(text);
     this.setState({ isEmpty: text === '' });
-  };
+	};
+	
+	render() {
+    const {
+      cancelButtonTitle,
+      clearIcon,
+      containerStyle,
+      leftIcon,
+      leftIconContainerStyle,
+      rightIconContainerStyle,
+      inputContainerStyle,
+      inputStyle,
+      noIcon,
+      placeholderTextColor,
+      showLoading,
+      loadingProps,
+      ...attributes
+    } = this.props;
+    const { hasFocus, isEmpty } = this.state;
+    const { style: loadingStyle, ...otherLoadingProps } = loadingProps;
+    const searchIcon = (
+      <Ionicon size={20} name={'ios-search'} color={IOS_GRAY} />
+    );
+    return (
+      <View style={[styles.container, containerStyle]}>
+        <Input
+          {...attributes}
+          onFocus={this.onFocus}
+          onBlur={this.onBlur}
+          onChangeText={this.onChangeText}
+          ref={input => (this.input = input)}
+          inputStyle={[styles.input, inputStyle]}
+          inputContainerStyle={[
+            styles.inputContainer,
+            !hasFocus && { width: SCREEN_WIDTH - 32, marginRight: 15 },
+            inputContainerStyle,
+          ]}
+          leftIconContainerStyle={[
+            styles.leftIconContainerStyle,
+            leftIconContainerStyle,
+          ]}
+          placeholderTextColor={placeholderTextColor}
+        />
+				<TouchableOpacity onPress={this.send} style={styles.button}>
+					<Ionicon name='md-send' size={40}/>
+				</TouchableOpacity>
+      </View>
+    );
+  }
 
 }
 
 ChatInput.propTypes = {
-  cancelButtonTitle: PropTypes.string,
+  rightButtonTitle: PropTypes.string,
   clearIcon: PropTypes.bool,
   loadingProps: PropTypes.object,
   noIcon: PropTypes.bool,
   showLoading: PropTypes.bool,
   onClear: PropTypes.func,
-  onCancel: PropTypes.func,
+	onCancel: PropTypes.func,
+	onSend: PropTypes.func,
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   onChangeText: PropTypes.func,
@@ -75,13 +154,14 @@ ChatInput.propTypes = {
 };
 
 ChatInput.defaultProps = {
-  cancelButtonTitle: 'Cancel',
+  rightButtonTitle: 'Send',
   clearIcon: true,
   loadingProps: {},
   noIcon: false,
   showLoading: false,
   onClear: () => null,
-  onCancel: () => null,
+	onCancel: () => null,
+	onSend: () => null,
   onFocus: () => null,
   onBlur: () => null,
   onChangeText: () => null,
@@ -89,6 +169,11 @@ ChatInput.defaultProps = {
 };
 
 const styles = StyleSheet.create({
+	button: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 13,
+  },
   container: {
     width: SCREEN_WIDTH,
     backgroundColor: '#f5f5f5',
@@ -114,5 +199,33 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 });
+
+class DummyChatInput extends Component {
+	constructor(props) {
+    super(props);
+    this.state = {
+      value: ""
+    }
+  }
+	//this should all be in the ChatUI component but i'm putting them in here for now
+  onInputChange = text => {
+    console.log('value : ', text)
+    this.setState({value: text || ""});   
+  }
+  onInputCancel = () => this.onInputChange('');
+	onInputClear = () => this.onInputChange('');
+	
+	render() {
+		return(
+			<SearchBar placeholder="iOS searchbar" noIcon clearIcon platform="ios" {...dummySearchBarProps} 
+				onChangeText={this.onInputChange}
+				onClear={this.onInputClear}
+				onCancel={this.onInputCancel}
+				value={this.state.value}
+			/>
+		)
+	}
+
+}
 
 export default ChatInput
